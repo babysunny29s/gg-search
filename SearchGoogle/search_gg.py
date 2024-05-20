@@ -11,8 +11,13 @@ def get_facebook_result_by_ggsearch(phrase, period):
     'tbs': f'qdr:{period}',
     'start':f'{start_cur}'
 }
+    proxies = {
+        "http": "http://172.168.201.4:34007",
+        "https": "http://172.168.201.4:34007"
+    }
+    response = requests.get(url, params=params, proxies=proxies, headers=cfg.headers)
     # response = requests.get(url, proxies=cfg.proxies, headers=cfg.headers)
-    response = requests.get(url, params=params, headers=cfg.headers)
+    # response = requests.get(url, params=params, headers=cfg.headers)
     # Parse HTML content
     soup = BeautifulSoup(response.text, 'html.parser')
     results = []
@@ -52,8 +57,12 @@ def get_youtube_result_by_ggsearch(phrase, period):
     'tbs': f'qdr:{period},srcf:H4sIAAAAAAAAANOuzC8tKU1K1UvOz1UryMnXK8tTK8nMLsnPBouUlOZnlhSlgkTTEpNTk_1Kh4imJeSVFmSAmSAoA5e4MJ0UAAAA',
     'tbm': 'vid',
 }
-    # response = requests.get(url, proxies=cfg.proxies, headers=cfg.headers)
-    response = requests.get(url, params=params, headers=cfg.headers)
+    proxies = {
+        "http": "http://172.168.201.4:34007",
+        "https": "http://172.168.201.4:34007"
+    }
+    response = requests.get(url, proxies=proxies, headers=cfg.headers)
+    # response = requests.get(url, params=params, headers=cfg.headers)
     # Parse HTML content
     soup = BeautifulSoup(response.text, 'html.parser')
     results = []
@@ -81,8 +90,13 @@ def get_tiktok_result_by_ggsearch(phrase, period):
                     'tbm': 'vid',
                     'start': f'{start_cur}' 
 }
+        proxies = {
+                "http": "http://172.168.201.4:34006",
+                "https": "http://172.168.201.4:34006"
+            }
+        response = requests.get(url, params=params, headers=cfg.headers, proxies=proxies)
         # response = requests.get(url, proxies=cfg.proxies, headers=cfg.headers)
-        response = requests.get(url, params=params, headers=cfg.headers)
+        # response = requests.get(url, params=params, headers=cfg.headers)
         # Parse HTML content
         soup = BeautifulSoup(response.text, 'html.parser')
         # Iterate through search results

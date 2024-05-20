@@ -2,6 +2,11 @@
 import re
 from SearchFacebook.define_api import *
 from requests import Session
+from requests_html import HTMLSession
+from urllib.parse import urljoin
+import json
+import jsonpath_ng
+
 # headers = {
 #     'accept': '*/*',
 #     'accept-language': 'vi,vi-VN;q=0.9,en-US;q=0.8,en;q=0.7',
@@ -62,26 +67,69 @@ from requests import Session
 
 # else:
 #     print("UFI2Config script not found")
+FB_BASE_URL = 'https://facebook.com/'
+FB_W3_BASE_URL = 'https://www.facebook.com/'
+FB_MOBILE_BASE_URL = 'https://m.facebook.com/'
+FB_MBASIC_BASE_URL = 'https://mbasic.facebook.com/'
+def convert_url(post_url):
+    url = str(post_url)
+    if url.startswith(FB_BASE_URL):
+        url = url.replace(FB_BASE_URL, FB_W3_BASE_URL)
+    if url.startswith(FB_MOBILE_BASE_URL):
+        url = url.replace(FB_MOBILE_BASE_URL, FB_W3_BASE_URL)
+    if not url.startswith(FB_W3_BASE_URL):
+        url = urljoin(FB_W3_BASE_URL, url)
+    return url
 
-def get_id_post(url, session: Session):
+# Trả về type của link và thông tin  returrn type_link, id(nếu là story thì là storyID, nếu là ảnh là id ảnh, nếu là video là idvideo), group_id
+def get_id_post(url, session: HTMLSession):
     pattern_storyID = r'(?<="storyID":")[^"]+'
     pattern_groupID = r'(?<="groupID":")(\d+)'
     try:
+        url = convert_url(url)
         response = session.get(url=url, timeout=TIME_OUT)
         storyID = list(set(re.findall(pattern_storyID, response.text)))
         groupID = list(set(re.findall(pattern_groupID, response.text)))
+        
+        #Trường hợp là link bài post => tìm được id 
         if storyID:
             if "group" in url:
                 if groupID:
-                    return storyID[0], groupID[0]
+                    return "story", storyID[0], groupID[0]
                 else:
                     print("Không có group ID")
-                    return "", ""
+                    return "", "", ""
             else:
-                return storyID[0], ""
+                return "story", storyID[0], ""
         else:
-            print("Không tìm thấy id bài post")
-            return "", ""
+            # print("Không tìm thấy id bài post")
+            # return "", ""
+            scripts = response.html.find('script')
+            fb_interaction_script = None
+
+            for script in scripts:
+                if 'FBInteractionTracingDependencies' in script.text:
+                    fb_interaction_script = script.text
+                    break
+            if fb_interaction_script:
+                json_FBI = json.loads(fb_interaction_script)
+                path_rootview = jsonpath_ng.parse("$..initialRouteInfo.route")
+                match = path_rootview.find(json_FBI)
+                if match:
+                    data = match[0].value
+                    params = data["params"]
+                    if "video_id" in params:
+                        video_id = params['video_id']
+                        pageID = data['rootView']['props']['pageID']
+                        return "video", video_id, pageID
+                    else:
+                        fbid = params['fbid']
+                        return "photo", fbid, ""
+                else:
+                    print("Không tìm thấy initialRouteInfo")
+            
+            return "", "", ""
     except Exception as e:
         print(e)
-        return "", ""
+        return "", "", ""
+    

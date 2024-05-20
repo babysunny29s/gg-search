@@ -519,13 +519,13 @@ class ParserInfoPost:
         
         self.post.like, self.post.haha, self.post.wow, self.post.sad, self.post.love, self.post.angry, self.post.care = reactions['like'], reactions['haha'], reactions['wow'], reactions['sad'], reactions['love'], reactions['angry'], reactions['care']
        
-        write_log_json_post(post=self.post, file=self.path_file)
+        del self.post
+        # write_log_json_post(post=self.post, file=self.path_file)
         # if self.post.is_valid():
         #     print(f"Đẩy post {self.post.id} qua kafka")
         #     #push_kafka(posts=[self.post])
         #     del self.post
         #     self.extract_post_comments(jsondata)
-        # return self.post.__dict__
 
 class ParseCommentFromJson:
     

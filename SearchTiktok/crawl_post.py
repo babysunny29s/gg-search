@@ -6,7 +6,7 @@ import json
 import time
 
 from bs4 import BeautifulSoup
-from kafka import KafkaProducer
+# from kafka import KafkaProducer
 from SearchTiktok.post_tiktok_etractor import PostTikTokExtractor, PostCommentExtractor, PostReplyExtractor
 from logger import logger
 from urllib.parse import urlencode as encoder

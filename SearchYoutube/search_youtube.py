@@ -125,14 +125,12 @@ class DetailCrawler:
             video_info['created_time'] = int(datetime.datetime.strptime(data2["playerMicroformatRenderer"]["uploadDate"], "%Y-%m-%dT%H:%M:%S%z").timestamp())
             video_info["duration"] = int(data["lengthSeconds"])
             video_info['content']= ''
-            time.sleep(2)
             try: 
                 video_info["comment"] = int(json_list[3])
             except: 
                 video_info["comment"]=0
             return video_info
         except Exception as e:
-            print("Exception at extract_video_info_json(): ",e)
             return
     
 

@@ -35,10 +35,10 @@ class ScraperPostSearch:
             return ""
     
     def __processing_data(self, data, keyword: str):
-        data_post = []
         cursor = ""
         matches = data.split("\n")
         print(f">> Số json trả về là {len(matches)}")
+        data_post =[]
         for i, match in enumerate(matches):
             try:
                 json_match = json.loads(match)
@@ -53,21 +53,20 @@ class ScraperPostSearch:
                             post_id = node_story['post_id']
                             #lấy thông tin cơ bản của bài viết
                             post = Post(id=post_id)
-                            info_post = ParserInfoPost(post=post, path_file=f"SearchFacebook/db/Search/{keyword.replace(' ', '_')}_info.json")
+                            
+                            info_post = ParserInfoPost(post=post, path_file=f"db/Search/{keyword.replace(' ', '_')}_info.json")
                             info_post.extract(jsondata=node_story)
                             self.idem += 1
                             create_time_post = post.created_time
+                            data_post.append(post.__dict__)
                             del info_post
+                            del post
                             print(f">> Time create post {post_id} {create_time_post}")
                             if self.time_line is not None:
                                 if check_time_line_expired(create_time_post, self.time_line):
-                                    del post
                                     print(f">> Thời gian bài đăng đã quá {self.time_line}")
                                     self.check_time_expired =  True
                                     return cursor, data_post
-                                else:
-                                    data_post.append(post.__dict__)
-                                    del post
             except Exception as ex:
                 print(f">> Error func __processing_data: {ex}")
         return cursor, data_post
@@ -81,39 +80,28 @@ class ScraperPostSearch:
             self.bCheck = False
     def __scraper_post_search(self, keyword: str):
         try:
-            data_posts = []
+            data_post = []
             self.__reset_params()
             results = get_data_post_search(session=self.SESSION, text=keyword)
             if results is None:
                 print("Không có data trả về từ server")
                 return
             end_cursor, data_post = self.__processing_data(data=results, keyword=keyword)
-            data_posts.extend(data_post)
             self.__check_done()
             while self.bCheck:
                 if end_cursor:
                     results = get_data_post_search(session=self.SESSION, text=keyword, cursor=end_cursor)
-                    end_cursor, data_post = self.__processing_data(data=results, keyword=keyword)
-                    data_posts.extend(data_post)
+                    end_cursor, data_post  = self.__processing_data(data=results, keyword=keyword)
                     self.__check_done()
                 else:
                     self.bCheck = False
                     break
             print(f">> Scraper done key {keyword}, number post {self.idem}")
-            return data_posts
+            return data_post
         except Exception as e:
             print(f">> Error func scaper_group: {e}")
     def search_post(self, keyword: str):
         print(f"Search các bài viết trên facebook với từ khóa {keyword}")
-        data_posts = self.__scraper_post_search(keyword=keyword)
-        # data_posts = self.remove_duplicates_by_id(data_posts)
-        return data_posts
+        data_post = self.__scraper_post_search(keyword=keyword)
+        return data_post
 
-    # def remove_duplicates_by_id(self,lst):
-    #     unique_dicts = []
-    #     seen_ids = set()
-    #     for d in lst:
-    #         if d['id'] not in seen_ids:
-    #             unique_dicts.append(d)
-    #             seen_ids.add(d['id'])
-    #     return unique_dicts
